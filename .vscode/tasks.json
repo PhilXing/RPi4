@@ -6,7 +6,7 @@
         {
             "label": "RPi4",
             "type": "shell",
-            "command": ". buildrpi4.sh",
+            "command": ". makerpi4.sh",
             "problemMatcher": [],
             "group": {
                 "kind": "build",

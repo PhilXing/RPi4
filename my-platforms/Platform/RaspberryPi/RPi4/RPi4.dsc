@@ -32,6 +32,13 @@
   DEFINE SECURE_BOOT_ENABLE      = FALSE
   DEFINE INCLUDE_TFTP_COMMAND    = FALSE
   DEFINE DEBUG_PRINT_ERROR_LEVEL = 0x8000004F
+  # DEFINE DEVEL_MODE              = TRUE
+
+!if $(DEVEL_MODE)
+  DEFINE NETWORK_HTTP_BOOT_ENABLE            = FALSE
+!else  
+  DEFINE NETWORK_HTTP_BOOT_ENABLE            = TRUE
+!endif  
 
 !ifndef TFA_BUILD_ARTIFACTS
   #
@@ -297,6 +304,18 @@
   gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x21
 !else
   gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x2f
+!endif
+
+!if $(DEVEL_MODE)
+  ## IPv4 PXE support
+  # 0x01 = PXE Enabled
+  # 0x00 = PXE Disabled
+  gEfiNetworkPkgTokenSpaceGuid.PcdIPv4PXESupport|0x00
+
+  ## IPv6 PXE support
+  # 0x01 = PXE Enabled
+  # 0x00 = PXE Disabled
+  gEfiNetworkPkgTokenSpaceGuid.PcdIPv6PXESupport|0x00
 !endif
 
   #  DEBUG_INIT      0x00000001  // Initialization
