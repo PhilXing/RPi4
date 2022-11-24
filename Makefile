@@ -2,11 +2,8 @@ SHELL := /bin/bash
 
 # Directory variables
 CUR_DIR := $(PWD)
-$(info CUR_DIR=$(CUR_DIR))
 SCRIPTS_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-$(info SCRIPTS_DIR=$(SCRIPTS_DIR))
 ROOT_DIR := $(shell dirname $(SCRIPTS_DIR))
-$(info ROOT_DIR=$(ROOT_DIR))
 
 EDK2_SRC_DIR := $(SCRIPTS_DIR)/edk2
 EDK2_NON_OSI_SRC_DIR := $(SCRIPTS_DIR)/edk2-non-osi
@@ -22,7 +19,6 @@ DEVEL_MODE ?= TRUE
 EDK2_GCC_TAG := GCC5
 GCC5_AARCH64_PREFIX := aarch64-linux-gnu-
 CROSS_COMPILE := $(AARCH64_TOOLS_DIR)/$(GCC5_AARCH64_PREFIX)
-$(info CROSS_COMPILE=$(CROSS_COMPILE))
 COMPILER := $(AARCH64_TOOLS_DIR)/$(GCC5_AARCH64_PREFIX)
 
 NUM_THREADS := $(shell echo $$(( $(shell getconf _NPROCESSORS_ONLN) + $(shell getconf _NPROCESSORS_ONLN))))
@@ -36,20 +32,29 @@ BUILD_VARIANT := $(if $(shell echo $(DEBUG) | grep -w 1),DEBUG,RELEASE)
 BUILD_VARIANT_LOWER := $(shell echo $(BUILD_VARIANT) | tr A-Z a-z)
 BUILD_VARIANT_UFL := $(shell echo $(BUILD_VARIANT_LOWER) | sed 's/.*/\u&/')
 
+GIT_VER := $(shell cd $(EDK2_PLATFORMS_SRC_DIR) 2>/dev/null && \
+			git describe --tags --dirty --long --always | grep ampere | grep -v dirty | cut -d \- -f 1 | cut -d \v -f 2)
+# Input VER
+VER ?= $(shell echo $(GIT_VER) | cut -d \. -f 1,2)
+VER := $(if $(VER),$(VER),0.00)
+MAJOR_VER := $(shell echo $(VER) | cut -d \. -f 1 )
+MINOR_VER := $(shell echo $(VER) | cut -d \. -f 2 )
+
+# Input BUILD
+BUILD ?= $(shell echo $(GIT_VER) | cut -d \. -f 3)
+BUILD := $(if $(BUILD),$(BUILD),100)
+
 # iASL version
 IASL_VER := 20200110
 
 # File path variables
-OUTPUT_VARIANT := $(if $(shell echo $(DEBUG) | grep -w 1),_debug,release)
-# OUTPUT_BASENAME = $(BOARD_NAME)_tianocore_$(OUTPUT_VARIANT)_$(VER).$(BUILD)
-OUTPUT_BASENAME = $(OUTPUT_VARIANT)
-$(eval RELEASE_SUBDIR_ := $(subst .A1,,$(OUTPUT_BASENAME)))
-$(eval RELEASE_SUBDIR := $(subst _tianocore_atf,,$(RELEASE_SUBDIR_)))
-
-OUTPUT_BIN_DIR := $(if $(DEST_DIR),$(DEST_DIR),$(CUR_DIR)/BUILDS/$(OUTPUT_BASENAME))
-#OUTPUT_FD_IMAGE := $(OUTPUT_BIN_DIR)/tianocore$(OUTPUT_VARIANT)_$(VER).$(BUILD).fd
+OUTPUT_VARIANT := $(if $(shell echo $(DEBUG) | grep -w 1),debug,release)
+OUTPUT_BASENAME := $(OUTPUT_VARIANT)_$(VER).$(BUILD)
+OUTPUT_BIN_DIR := $(if $(DEST_DIR),$(DEST_DIR)/$(OUTPUT_BASENAME), $(CUR_DIR)/BUILDS/$(OUTPUT_BASENAME))
 OUTPUT_FD_IMAGE := $(OUTPUT_BIN_DIR)/RPI_EFI.fd
 
+FIRMWARE_VER="$(MAJOR_VER).$(MINOR_VER).$(BUILD) Build $(shell date '+%Y%m%d')"
+$(info FIRMWARE_VER=$(FIRMWARE_VER))
 
 .PHONY: all
 all: tianocore_fd
@@ -142,6 +147,10 @@ tianocore_fd: _tianocore_prepare
 	$(eval EDK2_FD_IMAGE := $(EDK2_FV_DIR)/RPI_EFI.fd)
 	. $(EDK2_SRC_DIR)/edksetup.sh && build -a AARCH64 -t $(EDK2_GCC_TAG) -b $(BUILD_VARIANT) -n $(NUM_THREADS) \
 		-D DEVEL_MODE=$(DEVEL_MODE) \
+		-D FIRMWARE_VER=$(FIRMWARE_VER) \
 		-p $(DSC_FILE)
+#		-D MAJOR_VER=$(MAJOR_VER) -D MINOR_VER=$(MINOR_VER) \
+
+	@echo "Copy FD to $(OUTPUT_FD_IMAGE)"
 	@mkdir -p $(OUTPUT_BIN_DIR)
 	@cp -f $(EDK2_FD_IMAGE) $(OUTPUT_FD_IMAGE)

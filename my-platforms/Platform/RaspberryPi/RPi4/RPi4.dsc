@@ -371,7 +371,11 @@
   gEmbeddedTokenSpaceGuid.PcdDmaDeviceOffset|0xc0000000
   gEmbeddedTokenSpaceGuid.PcdDmaDeviceLimit|0xffffffff
 
+!ifdef $(FIRMWARE_VER)
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwareVersionString|L"$(FIRMWARE_VER)"
+!else  
   gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwareVersionString|L"EDK2-DEV"
+!endif
 
 !if $(SECURE_BOOT_ENABLE) == TRUE
   # override the default values from SecurityPkg to ensure images from all sources are verified in secure boot
