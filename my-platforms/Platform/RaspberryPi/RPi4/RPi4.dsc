@@ -573,7 +573,11 @@
   # Common UEFI ones.
   #
 
+!if $(DEVEL_MODE)
+  gEfiMdePkgTokenSpaceGuid.PcdPlatformBootTimeOut|L"Timeout"|gEfiGlobalVariableGuid|0x0|0
+!else  
   gEfiMdePkgTokenSpaceGuid.PcdPlatformBootTimeOut|L"Timeout"|gEfiGlobalVariableGuid|0x0|5
+!endif  
   #
   # This is silly, but by pointing SetupConXXX and ConXXX PCDs to
   # the same variables, I can use the graphical configuration to
