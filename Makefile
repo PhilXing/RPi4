@@ -4,6 +4,7 @@ SHELL := /bin/bash
 CUR_DIR := $(PWD)
 SCRIPTS_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 ROOT_DIR := $(shell dirname $(SCRIPTS_DIR))
+RELEASE_PACKAGE_DIR := $(CUR_DIR)/my-platforms/UEFI_boot
 
 EDK2_SRC_DIR := $(SCRIPTS_DIR)/edk2
 EDK2_NON_OSI_SRC_DIR := $(SCRIPTS_DIR)/edk2-non-osi
@@ -151,6 +152,8 @@ tianocore_fd: _tianocore_prepare
 		-p $(DSC_FILE)
 #		-D MAJOR_VER=$(MAJOR_VER) -D MINOR_VER=$(MINOR_VER) \
 
-	@echo "Copy FD to $(OUTPUT_FD_IMAGE)"
+# Update UEFI_Boot package to output binary directory	
 	@mkdir -p $(OUTPUT_BIN_DIR)
+	@cp -ur $(RELEASE_PACKAGE_DIR)/* $(OUTPUT_BIN_DIR)
+	@echo "Copy FD to $(OUTPUT_FD_IMAGE)"
 	@cp -f $(EDK2_FD_IMAGE) $(OUTPUT_FD_IMAGE)
